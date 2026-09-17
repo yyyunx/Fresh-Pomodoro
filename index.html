@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>清新番茄鐘</title>
+  <style>
+    :root{
+      --mint:#8fcfbe;
+      --mint-dark:#63b6a2;
+      --mint-soft:#eaf8f4;
+      --sky:#eef8fb;
+      --cream:#fffdf8;
+      --text:#355c55;
+      --muted:#78948e;
+      --line:#dcebe6;
+      --white:#ffffff;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,"Noto Sans TC",sans-serif;
+      color:var(--text);
+      background:linear-gradient(135deg,#f6fbf9,#eef8fb);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .app{
+      width:min(980px,100%);
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);
+      gap:20px;
+    }
+
+    .card{
+      background:rgba(255,255,255,.92);
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:28px;
+    }
+
+    h1{margin:0 0 6px;font-size:30px}
+    .subtitle{margin:0 0 24px;color:var(--muted)}
+
+    .clock{
+      font-size:clamp(72px,13vw,120px);
+      font-weight:800;
+      letter-spacing:-5px;
+      text-align:center;
+      margin:34px 0 12px;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .status{
+      text-align:center;
+      color:var(--muted);
+      margin-bottom:20px;
+    }
+
+    .progress{
+      height:8px;
+      background:var(--mint-soft);
+      border-radius:999px;
+      overflow:hidden;
+      margin-bottom:26px;
+    }
+
+    .progress > div{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--mint),#acdacf);
+      transition:width .25s linear;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    button,select,input{font:inherit}
+
+    .btn{
+      min-width:140px;
+      min-height:48px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-weight:700;
+      cursor:pointer;
+      padding:10px 18px;
+    }
+
+    .btn.primary{
+      background:var(--mint);
+      border-color:var(--mint);
+      color:white;
+    }
+
+    .btn.primary:hover{background:var(--mint-dark)}
+    .btn.secondary{background:var(--sky);color:var(--text)}
+    .btn.share{background:var(--cream);color:var(--text)}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:26px;
+    }
+
+    .stat{
+      background:#f8fbfa;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:15px;
+    }
+
+    .label{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+
+    .value{font-weight:800}
+
+    .side-title{
+      font-size:20px;
+      font-weight:800;
+      margin:0 0 20px;
+    }
+
+    .control{
+      padding:16px 0;
+      border-top:1px solid var(--line);
+    }
+
+    .control:first-of-type{border-top:0;padding-top:0}
+
+    .control-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
+    .control label{font-weight:700}
+    .control span{color:var(--muted);font-size:14px}
+
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--mint-dark);
+    }
+
+    select{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      background:#f8fbfa;
+      color:var(--text);
+    }
+
+    .share-box{
+      margin-top:18px;
+      background:var(--mint-soft);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      color:var(--text);
+      word-break:break-all;
+      font-size:14px;
+      display:none;
+    }
+
+    .note{
+      margin-top:10px;
+      font-size:13px;
+      line-height:1.5;
+      color:var(--muted);
+    }
+
+    @media(max-width:760px){
+      .app{grid-template-columns:1fr}
+    }
+
+    @media(max-width:480px){
+      body{padding:12px}
+      .card{padding:20px 16px;border-radius:22px}
+      .btn{width:100%}
+      .stats{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card">
+      <h1>🍅 清新番茄鐘</h1>
+      <p class="subtitle">專注工作，也記得好好休息。</p>
+
+      <div id="clock" class="clock">25:00</div>
+      <div id="status" class="status">準備開始專注</div>
+
+      <div class="progress" aria-hidden="true">
+        <div id="progressBar"></div>
+      </div>
+
+      <div class="actions">
+        <button id="startPauseBtn" class="btn primary" type="button">開始</button>
+        <button id="resetBtn" class="btn secondary" type="button">重置</button>
+        <button id="shareBtn" class="btn share" type="button">分享連結</button>
+      </div>
+
+      <div id="shareBox" class="share-box"></div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label">目前模式</div>
+          <div id="modeText" class="value">專注</div>
+        </div>
+        <div class="stat">
+          <div class="label">完成番茄鐘</div>
+          <div class="value"><span id="count">0</span> 🍅</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2 class="side-title">時間與音效</h2>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="workMinutes">工作時間</label>
+          <span id="workValue">25 分鐘</span>
+        </div>
+        <input id="workMinutes" type="range" min="1" max="60" value="25" />
+      </div>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="breakMinutes">休息時間</label>
+          <span id="breakValue">5 分鐘</span>
+        </div>
+        <input id="breakMinutes" type="range" min="1" max="30" value="5" />
+      </div>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="soundSelect">完成音效</label>
+          <span>可試聽</span>
+        </div>
+        <select id="soundSelect">
+          <option value="bell">清脆鈴聲</option>
+          <option value="soft">柔和提示音</option>
+          <option value="digital">電子提示音</option>
+          <option value="none">關閉音效</option>
+        </select>
+        <div style="margin-top:10px">
+          <button id="previewSoundBtn" class="btn secondary" type="button">試聽音效</button>
+        </div>
+      </div>
+
+      <p class="note">
+        「分享連結」會建立包含目前工作與休息分鐘數的網址。
+        將這個檔案部署到 GitHub Pages、Netlify 或 Vercel 後，朋友打開分享網址即可使用相同設定。
+      </p>
+    </aside>
+  </main>
+
+  <script>
+    const clock = document.getElementById("clock");
+    const statusEl = document.getElementById("status");
+    const progressBar = document.getElementById("progressBar");
+    const startPauseBtn = document.getElementById("startPauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const shareBtn = document.getElementById("shareBtn");
+    const shareBox = document.getElementById("shareBox");
+    const modeText = document.getElementById("modeText");
+    const countEl = document.getElementById("count");
+
+    const workMinutes = document.getElementById("workMinutes");
+    const breakMinutes = document.getElementById("breakMinutes");
+    const workValue = document.getElementById("workValue");
+    const breakValue = document.getElementById("breakValue");
+    const soundSelect = document.getElementById("soundSelect");
+    const previewSoundBtn = document.getElementById("previewSoundBtn");
+
+    const params = new URLSearchParams(location.search);
+    if (params.has("work")) workMinutes.value = Math.min(60, Math.max(1, Number(params.get("work")) || 25));
+    if (params.has("break")) breakMinutes.value = Math.min(30, Math.max(1, Number(params.get("break")) || 5));
+
+    let mode = "work";
+    let duration = Number(workMinutes.value) * 60;
+    let remaining = duration;
+    let timer = null;
+    let running = false;
+    let completed = 0;
+    let audioContext = null;
+
+    function render() {
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      clock.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+      const elapsed = duration - remaining;
+      progressBar.style.width = `${duration ? (elapsed / duration) * 100 : 0}%`;
+      modeText.textContent = mode === "work" ? "專注" : "休息";
+      countEl.textContent = completed;
+      workValue.textContent = `${workMinutes.value} 分鐘`;
+      breakValue.textContent = `${breakMinutes.value} 分鐘`;
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      timer = null;
+      running = false;
+    }
+
+    function setMode(nextMode) {
+      stopTimer();
+      mode = nextMode;
+      duration = Number(mode === "work" ? workMinutes.value : breakMinutes.value) * 60;
+      remaining = duration;
+      startPauseBtn.textContent = "開始";
+      statusEl.textContent = mode === "work" ? "準備開始專注" : "休息一下吧";
+      render();
+    }
+
+    function beep(freq, start, length, volume) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioContext) audioContext = new Ctx();
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, audioContext.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + start + length);
+      osc.start(audioContext.currentTime + start);
+      osc.stop(audioContext.currentTime + start + length + 0.03);
+    }
+
+    function playSound() {
+      const type = soundSelect.value;
+      if (type === "none") return;
+      if (type === "bell") {
+        beep(660,0,.35,.12);
+        beep(880,.16,.45,.08);
+      } else if (type === "soft") {
+        beep(440,0,.25,.05);
+        beep(523,.22,.3,.05);
+        beep(659,.44,.3,.04);
+      } else {
+        beep(900,0,.1,.08);
+        beep(1100,.15,.1,.08);
+        beep(900,.3,.1,.08);
+      }
+    }
+
+    startPauseBtn.addEventListener("click", () => {
+      if (running) {
+        stopTimer();
+        startPauseBtn.textContent = "繼續";
+        statusEl.textContent = "已暫停";
+        return;
+      }
+
+      running = true;
+      startPauseBtn.textContent = "暫停";
+      statusEl.textContent = mode === "work" ? "專注中…" : "休息中…";
+
+      timer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          remaining = 0;
+          render();
+          playSound();
+          if (mode === "work") {
+            completed++;
+            setMode("break");
+          } else {
+            setMode("work");
+          }
+          return;
+        }
+        render();
+      },1000);
+    });
+
+    resetBtn.addEventListener("click", () => setMode(mode));
+
+    workMinutes.addEventListener("input", () => {
+      if (!running && mode === "work") {
+        duration = Number(workMinutes.value) * 60;
+        remaining = duration;
+      }
+      render();
+    });
+
+    breakMinutes.addEventListener("input", () => {
+      if (!running && mode === "break") {
+        duration = Number(breakMinutes.value) * 60;
+        remaining = duration;
+      }
+      render();
+    });
+
+    previewSoundBtn.addEventListener("click", playSound);
+
+    shareBtn.addEventListener("click", async () => {
+      const url = new URL(location.href);
+      url.searchParams.set("work", workMinutes.value);
+      url.searchParams.set("break", breakMinutes.value);
+      const shareUrl = url.toString();
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "清新番茄鐘",
+            text: "一起用這個番茄鐘專注工作吧！",
+            url: shareUrl
+          });
+          return;
+        } catch (e) {}
+      }
+
+      shareBox.style.display = "block";
+      shareBox.textContent = shareUrl;
+    });
+
+    render();
+  </script>
+</body>
+</html>
